@@ -35,3 +35,10 @@ Die Schalter-Telemetrie bestätigt den empfangenen Sollzustand, keine externe Me
 micro:bit im IoT:bit; Motorboard separat über P19/SCL, P20/SDA und gemeinsame Masse. IoT:bit P8/P12 sind für WLAN reserviert. Motoren M1/M2, Servo S1, Sensor P1, Aktionen P2/P16. Versorgung entsprechend der Einrichtungsseite.
 
 for PXT/microbit
+
+## Handy und Handgelenk
+Im Controller „Handy & Armgesten“ wählen. „Motion aktivieren“ fragt auf iOS nach Sensorzugriff. Keine Fahrtaste halten. Aktuelle Haltung wird zur Mitte. Neigen zum Fahren sendet normale Fahrbefehle.
+
+„wenn Handy-Geste oben / unten / links / rechts / Mitte“ löst pro Richtungswechsel aus. Erst Mitte, dann nächste Geste. Beispiel: oben → Servo auf 140 Grad; unten → Servo auf 40 Grad. „wenn Handy-Neigung empfangen“ liefert x (links/rechts), y (unten/oben), −100 bis 100, zum proportionalen Nachführen z.B. Servo auf `90 + y * 0.9`. Keine langen Pausen verwenden. Geste Mitte und Neigung 0/0 kommen bei Ablauf der 600-ms-Zeitüberwachung oder neuer Sitzung. Servos behalten beim Pausieren ihre letzte Position, sofern eigene Mitte-Aktionen nichts anderes vorgeben.
+
+Erkannt wird die Orientierung des Handys. Eine reine Verschiebung des Arms ohne Drehung und die genaue räumliche Armposition werden nicht erfasst. Sensorzugriff benötigt HTTPS und ein unterstütztes Mobilgerät.

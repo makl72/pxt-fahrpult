@@ -19,6 +19,46 @@ namespace fahrpult {
         Aus = 0
     }
 
+    export enum HandyGeste {
+        //% block="Mitte"
+        Mitte = 0,
+        //% block="oben"
+        Oben = 1,
+        //% block="unten"
+        Unten = 2,
+        //% block="links"
+        Links = 3,
+        //% block="rechts"
+        Rechts = 4
+    }
+    let letzteGeste = 0
+    let letzteNeigung = 0
+    let neigungAktiv = false
+    let neigungsHandler: (x: number, y: number) => void = null
+    function gesteSetzen(geste: number): void {
+        if (geste != letzteGeste) {
+            letzteGeste = geste
+            control.raiseEvent(9242, geste + 1)
+        }
+    }
+    /** Neigungsgeste, einmal je Richtung. Mitte auch bei Stop oder Verbindungsverlust. */
+    //% blockId=fahrpult_on_gesture block="wenn Handy-Geste $geste"
+    //% group="Eigene Aktionen" weight=98
+    export function wennHandyGeste(geste: HandyGeste, handler: () => void): void {
+        control.onEvent(9242, geste + 1, handler)
+    }
+    /** x: links/rechts; y: unten/oben. Werte -100 bis 100, etwa alle 150 ms. Keine langen Pausen. */
+    //% blockId=fahrpult_on_tilt block="wenn Handy-Neigung empfangen"
+    //% draggableParameters group="Eigene Aktionen" weight=97
+    export function wennHandyNeigung(handler: (x: number, y: number) => void): void {
+        neigungsHandler = handler
+    }
+    function neigungStoppen(): void {
+        const warAktiv = neigungAktiv
+        neigungAktiv = false
+        gesteSetzen(0)
+        if (warAktiv && neigungsHandler) neigungsHandler(0, 0)
+    }
     let gestartet = false
     let bereit = false
     let sitzung = ""
@@ -75,6 +115,7 @@ namespace fahrpult {
     }
     function neueSitzung(): void {
         stoppen(true)
+        neigungStoppen()
         letzteNummer = 0
         sitzung = "" + randint(10000000, 99999999)
         // Eigene AUS-Aktionen ausloesen; die beiden Standardausgaenge immer aus.
@@ -111,6 +152,13 @@ namespace fahrpult {
             fahrfreigabe = true
             if (fahrHandler) fahrHandler(links, rechts)
             else motoren(links, rechts)
+        } else if (teile[0] == "G" && teile.length == 6 && ganzeZahl(teile[3], 0, 4) && ganzeZahl(teile[4], -100, 100) && ganzeZahl(teile[5], -100, 100)) {
+            letzteNummer = nummer
+            stoppen(true)
+            letzteNeigung = input.runningTime()
+            neigungAktiv = true
+            gesteSetzen(parseInt(teile[3]))
+            if (neigungsHandler) neigungsHandler(parseInt(teile[4]), parseInt(teile[5]))
         } else if (teile[0] == "A" && teile.length == 5 && ganzeZahl(teile[3], 1, 2) && ganzeZahl(teile[4], 0, 1)) {
             letzteNummer = nummer
             schalterSetzen(parseInt(teile[3]), parseInt(teile[4]))
@@ -210,6 +258,7 @@ namespace fahrpult {
         neueSitzung()
         input.onButtonPressed(Button.B, function () { neueSitzung() })
         basic.forever(function () {
+            if (neigungAktiv && input.runningTime() - letzteNeigung >= 600) neigungStoppen()
             if (fahrfreigabe && input.runningTime() - letzterFahrbefehl >= 600) stoppen(true)
             if (bereit && (!ESP8266_IoT.wifiState(true) || !ESP8266_IoT.isMqttBrokerConnected())) {
                 bereit = false

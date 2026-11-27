@@ -1,6 +1,6 @@
 {
   "name": "pxt-fahrpult",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "BOT / CTRL: micro:bit-Fahrpult mit verborgener WLAN-Kommunikation und eigener Blockprogrammierung.",
   "license": "MIT",
   "dependencies": {
@@ -8,7 +8,11 @@
     "motor": "github:DFRobot/pxt-motor",
     "ESP8266_IoT": "github:elecfreaks/pxt-esp8266iot"
   },
-  "files": ["fahrpult.ts"],
-  "supportedTargets": ["microbit"],
+  "files": [
+    "fahrpult.ts"
+  ],
+  "supportedTargets": [
+    "microbit"
+  ],
   "preferredEditor": "tsprj"
 }
